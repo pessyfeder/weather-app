@@ -1,0 +1,74 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Weather";
+}
+
+<div class="hero">
+    <h1>☁️ Skylight Weather</h1>
+    <p>Search any city for current conditions and a 5-day forecast.</p>
+</div>
+
+<form method="get" class="search-form">
+    <input type="text" name="city" value="@Model.City" placeholder="Search for a city..." autofocus />
+    <button type="submit">Search</button>
+</form>
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="error-box">@Model.ErrorMessage</div>
+}
+
+@if (Model.MultipleMatches is { Count: > 1 })
+{
+    <div class="multi-match">
+        <p>Multiple cities matched &mdash; pick the right one:</p>
+        @foreach (var match in Model.MultipleMatches)
+        {
+            <a href="/?city=@Model.City&lat=@match.Latitude&lon=@match.Longitude&place=@Uri.EscapeDataString(match.DisplayName)">
+                📍 @match.DisplayName
+            </a>
+        }
+    </div>
+}
+
+@if (Model.Current is not null)
+{
+    <div class="current-card">
+        <div class="location">@Model.PlaceName</div>
+        <div class="icon">@WeatherCodeMapper.Icon(Model.Current.WeatherCode)</div>
+        <div class="temp">@Math.Round(Model.Current.Temperature)&deg;F</div>
+        <div class="desc">@WeatherCodeMapper.Describe(Model.Current.WeatherCode)</div>
+
+        <div class="detail-grid">
+            <div class="detail-item">
+                <div class="val">@Math.Round(Model.Current.FeelsLike)&deg;F</div>
+                <div class="lbl">Feels Like</div>
+            </div>
+            <div class="detail-item">
+                <div class="val">@Model.Current.Humidity%</div>
+                <div class="lbl">Humidity</div>
+            </div>
+            <div class="detail-item">
+                <div class="val">@Math.Round(Model.Current.WindSpeed)</div>
+                <div class="lbl">Wind (mph)</div>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.DailyForecast.Count > 0)
+    {
+        <div class="forecast-title">5-Day Forecast</div>
+        <div class="forecast-strip">
+            @foreach (var day in Model.DailyForecast)
+            {
+                <div class="forecast-day">
+                    <div class="dow">@day.Date.ToString("ddd")</div>
+                    <div class="ic">@day.Icon</div>
+                    <div class="hi">@Math.Round(day.TempMax)&deg;</div>
+                    <div class="lo">@Math.Round(day.TempMin)&deg;</div>
+                </div>
+            }
+        </div>
+    }
+}
