@@ -9,9 +9,12 @@ public class IndexModel : PageModel
 {
     private readonly WeatherService _weatherService;
 
-    public IndexModel(WeatherService weatherService)
+    private readonly ILogger<IndexModel> _logger;
+
+    public IndexModel(WeatherService weatherService, ILogger<IndexModel> logger)
     {
         _weatherService = weatherService;
+        _logger = logger;
     }
 
     [BindProperty(SupportsGet = true)]
@@ -53,8 +56,9 @@ public class IndexModel : PageModel
         {
             matches = await _weatherService.SearchCitiesAsync(City);
         }
-        catch (HttpRequestException)
+        catch (HttpRequestException ex)
         {
+            _logger.LogError(ex, "City search failed for {City}", City);
             ErrorMessage = "Couldn't reach the weather service. Please try again in a moment.";
             return;
         }
@@ -90,8 +94,9 @@ public class IndexModel : PageModel
                 ErrorMessage = "Couldn't load current conditions for this location.";
             }
         }
-        catch (HttpRequestException)
+        catch (HttpRequestException ex)
         {
+            _logger.LogError(ex, "Forecast failed for {Place} ({Lat}, {Lon})", placeName, lat, lon);
             ErrorMessage = "Couldn't reach the weather service. Please try again in a moment.";
         }
     }
